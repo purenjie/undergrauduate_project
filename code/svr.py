@@ -80,7 +80,7 @@ def plot_three_kernel(x, y):
 
 if __name__ == "__main__":
 
-    file = '/home/solejay/program/bishe/learn/all.xlsx'
+    file = '/home/solejay/program/bishe/learn/more.xlsx'
     data = get_data(file)
 
     # 整体集
