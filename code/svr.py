@@ -4,12 +4,27 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
+from sklearn import preprocessing
 
 # 读取 excel 文件，默认返回第一张表 
 # 返回类型：<class 'pandas.core.frame.DataFrame'>
 def get_data(file):
     sheet = pd.read_excel(io=file)
     return sheet
+
+# 异常值处理：——拉依达法则：数据偏差大于三倍标准差剔除
+def remove_outlier(x, y):
+    mean = np.mean(y)  # 平均值
+    std = np.std(y)  # 标准差
+    
+    lower_limit = mean-3*std  # 最小值
+    upper_limit = mean+3*std  # 最大值
+    
+    for i in range(y.shape[0]):
+        if y[i]<lower_limit or y[i]>upper_limit:
+            x = x.drop(i)
+            y = y.drop(i)
+    return x, y
 
 # 输出模型预测率 并写入日志文件
 def write_log(svr_model, x_test, y_test, excel_file):
@@ -51,11 +66,22 @@ def plot_graph(svr_model, x_test, y_test):
 
 if __name__ == "__main__":
 
-    excel_file = '/home/solejay/program/undergrauduate_project/excel/more.xlsx'
+    excel_file = '/home/solejay/program/undergrauduate_project/excel/all.xlsx'
     data = get_data(excel_file)
 
+    x = data.iloc[:, 0:5]
+    y = data.iloc[:, 5]
+
+    # 异常值处理
+    x, y = remove_outlier(x, y)
+
+    # 归一化处理
+    x = preprocessing.scale(x)
+    y = preprocessing.scale(y)
+
     # 划分训练集和测试集
-    x_train, x_test, y_train, y_test = train_test_split(data.iloc[:, 0:5], data.iloc[:, 5], test_size=0.25, random_state=33)
+    # x_train, x_test, y_train, y_test = train_test_split(data.iloc[:, 0:5], data.iloc[:, 5], test_size=0.25, random_state=33)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=33)
 
     # 核函数
     svr_rbf = SVR(kernel='rbf', gamma='auto')
