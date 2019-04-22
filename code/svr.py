@@ -26,6 +26,28 @@ def remove_outlier(x, y):
             y = y.drop(i)
     return x, y
 
+# 小波去噪
+def wt(index_list,data,wavefunc,lv,m,n):   # 打包为函数，方便调节参数。  lv为分解层数；data为最后保存的dataframe便于作图；index_list为待处理序列；wavefunc为选取的小波函数；m,n则选择了进行阈值处理的小波系数层数
+   
+    # 分解
+    coeff = pywt.wavedec(index_list,wavefunc,mode='sym',level=lv)   # 按 level 层分解，使用pywt包进行计算， cAn是尺度系数 cDn为小波系数
+
+    sgn = lambda x: 1 if x > 0 else -1 if x < 0 else 0 # sgn函数
+
+    # 去噪过程
+    for i in range(m,n+1):   # 选取小波系数层数为 m~n层，尺度系数不需要处理
+        cD = coeff[i]
+        for j in range(len(cD)):
+            Tr = np.sqrt(2*np.log(len(cD)))  # 计算阈值
+            if cD[j] >= Tr:
+                coeff[i][j] = sgn(cD[j]) - Tr  # 向零收缩
+            else:
+                coeff[i][j] = 0   # 低于阈值置零
+
+    # 重构
+    denoised_index = pywt.waverec(coeff,wavefunc)
+    return denoised_index
+
 # 输出模型预测率 并写入日志文件
 def write_log(svr_model, x_test, y_test, excel_file):
 
