@@ -1,3 +1,4 @@
+import pywt
 import pandas as pd
 from sklearn.svm import SVR
 import matplotlib.pyplot as plt
@@ -26,11 +27,14 @@ def remove_outlier(x, y):
             y = y.drop(i)
     return x, y
 
-# 小波去噪
-def wt(index_list,data,wavefunc,lv,m,n):   # 打包为函数，方便调节参数。  lv为分解层数；data为最后保存的dataframe便于作图；index_list为待处理序列；wavefunc为选取的小波函数；m,n则选择了进行阈值处理的小波系数层数
+# 打包为函数，方便调节参数。  
+# lv为分解层数；data为最后保存的dataframe便于作图；
+# index_list为待处理序列；wavefunc为选取的小波函数；
+# m,n则选择了进行阈值处理的小波系数层数
+def wt(index_list,wavefunc,lv,m,n):   
    
-    # 分解
-    coeff = pywt.wavedec(index_list,wavefunc,mode='sym',level=lv)   # 按 level 层分解，使用pywt包进行计算， cAn是尺度系数 cDn为小波系数
+    # 按 level 层分解，使用pywt包进行计算， cAn是尺度系数 cDn为小波系数
+    coeff = pywt.wavedec(index_list,wavefunc,mode='sym',level=lv)   
 
     sgn = lambda x: 1 if x > 0 else -1 if x < 0 else 0 # sgn函数
 
@@ -46,7 +50,7 @@ def wt(index_list,data,wavefunc,lv,m,n):   # 打包为函数，方便调节参�
 
     # 重构
     denoised_index = pywt.waverec(coeff,wavefunc)
-    return denoised_index
+    return denoised_index[1:]
 
 # 输出模型预测率 并写入日志文件
 def write_log(svr_model, x_test, y_test, excel_file):
@@ -96,6 +100,11 @@ if __name__ == "__main__":
 
     # 异常值处理
     x, y = remove_outlier(x, y)
+
+    # 小波去噪
+    for i in range(5):
+        x.iloc[:, i] = wt(x.iloc[:, i],'db4',4,1,4) 
+    y = wt(y,'db4',4,1,4) 
 
     # 归一化处理
     x = preprocessing.scale(x)

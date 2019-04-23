@@ -32,21 +32,18 @@ def plot_graph(x, y, svr_model):
     plt.show()  # 显示图像
 
 def plot_graph_1(x, y):
+    plt.plot(np.arange(1, len(x)+1).reshape((len(x), 1)), x, color='black', label='Data')
+    plt.plot(np.arange(1, len(y)+1).reshape((len(y), 1)), y, color='red', label='Data')
+    plt.show()
 
-    plt.plot(x, y, color='black', label='Data')  # 实际数据
-#     plt.plot(sample, svr_model.predict(x), color='red', label='RBF model')  # 预测数据
-
-    plt.xlabel('sample')  # x 轴标签
-    plt.ylabel('utilization')  # y 轴标签
-    plt.title('Support Vector Regression')  # 图像标题
-    plt.legend()  # 显示图例（label）
-    plt.show()  # 显示图像
-
-# 函数打包
-def wt(index_list,data,wavefunc,lv,m,n):   # 打包为函数，方便调节参数。  lv为分解层数；data为最后保存的dataframe便于作图；index_list为待处理序列；wavefunc为选取的小波函数；m,n则选择了进行阈值处理的小波系数层数
+# 打包为函数，方便调节参数。  
+# lv为分解层数；data为最后保存的dataframe便于作图；
+# index_list为待处理序列；wavefunc为选取的小波函数；
+# m,n则选择了进行阈值处理的小波系数层数
+def wt(index_list,wavefunc,lv,m,n):   
    
-    # 分解
-    coeff = pywt.wavedec(index_list,wavefunc,mode='sym',level=lv)   # 按 level 层分解，使用pywt包进行计算， cAn是尺度系数 cDn为小波系数
+    # 按 level 层分解，使用pywt包进行计算， cAn是尺度系数 cDn为小波系数
+    coeff = pywt.wavedec(index_list,wavefunc,mode='sym',level=lv)   
 
     sgn = lambda x: 1 if x > 0 else -1 if x < 0 else 0 # sgn函数
 
@@ -64,16 +61,6 @@ def wt(index_list,data,wavefunc,lv,m,n):   # 打包为函数，方便调节参�
     denoised_index = pywt.waverec(coeff,wavefunc)
     return denoised_index
 
-    # # 在原dataframe中添加处理后的列便于画图
-    # data['denoised_index']=pd.Series('x',index=data.index)
-    # for i in range(len(data)):
-    #     data['denoised_index'][i] = denoised_index[i] 
-
-    # # 画图
-    # data = data.set_index(data['tradeDate'])
-    # data.plot(figsize=(20,20),subplots=(2,1))
-    # data.plot(figsize=(20,10))
-
 excel_file = '/home/solejay/program/undergrauduate_project/excel/more.xlsx'
 data = get_data(excel_file)
 
@@ -81,9 +68,23 @@ x = data.iloc[:, 0:5]
 y = data.iloc[:, 5]
 svr_rbf = SVR(kernel='rbf', gamma='auto')
 
+x1 = x.iloc[:, 0]  # 风压
+x2 = x.iloc[:, 1]  # 顶压
+x3 = x.iloc[:, 2]  # 风温
+x4 = x.iloc[:, 3]  # O2_FYL
+x5 = x.iloc[:, 4]  # 顶温
 
-y1 = wt(y,x,'db4',4,1,4) 
+x1_ = wt(x1,'db4',4,2,4) 
+x2_ = wt(x2,'db4',4,2,4) 
+x3_ = wt(x3,'db4',4,2,4) 
+x4_ = wt(x4,'db4',4,2,4) 
+x5_ = wt(x5,'db4',4,2,4) 
+y_ = wt(y,'db4',4,1,4) 
 
-plt.plot(np.arange(1, len(y)+1).reshape((len(y), 1)), y, color='black', label='Data')
-plt.plot(np.arange(1, len(y1)+1).reshape((len(y1), 1)), y1, color='red', label='Data')
-plt.show()
+plot_graph_1(x1, x1_)
+plot_graph_1(x2, x2_)
+plot_graph_1(x3, x3_)
+plot_graph_1(x4, x4_)
+plot_graph_1(x5, x5_)
+plot_graph_1(y, y_)
+
