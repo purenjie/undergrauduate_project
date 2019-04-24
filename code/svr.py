@@ -27,7 +27,7 @@ def remove_outlier(x, y):
             y = y.drop(i)
     return x, y
 
-# 打包为函数，方便调节参数。  
+# 小波去噪
 # lv为分解层数；data为最后保存的dataframe便于作图；
 # index_list为待处理序列；wavefunc为选取的小波函数；
 # m,n则选择了进行阈值处理的小波系数层数
@@ -56,7 +56,7 @@ def wt(index_list,wavefunc,lv,m,n):
 def write_log(svr_model, x_test, y_test, excel_file):
 
     pre_rate = svr_model.score(x_test, y_test)
-    print('预测率：%.4f' % pre_rate)
+    print('决定系数：%.4f' % pre_rate)
 
     y_pred = svr_rbf.predict(x_test)
     mse = mean_squared_error(y_test, y_pred)
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=33)
 
     # 核函数
-    svr_rbf = SVR(kernel='rbf', gamma='auto')
+    svr_rbf = SVR(kernel='rbf', C=1, gamma='auto')
     svr_rbf.fit(x_train, y_train)
 
     write_log(svr_rbf, x_test, y_test, excel_file)

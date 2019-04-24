@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn import preprocessing
 import pywt
+from sklearn.model_selection import GridSearchCV
 
 # 读取 excel 文件，默认返回第一张表 
 # 返回类型：<class 'pandas.core.frame.DataFrame'>
@@ -54,7 +55,6 @@ def wt(index_list,wavefunc,lv,m,n):
 
 # 输出模型预测率 并写入日志文件
 def write_log(svr_model, x_test, y_test, excel_file):
-
     pre_rate = svr_model.score(x_test, y_test)
     print('预测率：%.4f' % pre_rate)
 
@@ -126,11 +126,20 @@ y = preprocessing.scale(y)
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=33)
 
 # 核函数
-svr_rbf = SVR(kernel='rbf', gamma='auto')
+grid = GridSearchCV(SVR(), param_grid={"C":[0.1, 1, 10], "gamma": [1, 0.1, 0.01, 'auto']}, cv=4)
+grid.fit(x, y)
+svr_rbf = SVR(kernel='rbf', C=grid.best_params_['C'], gamma=grid.best_params_['gamma'])
 svr_rbf.fit(x_train, y_train)
 
+# print(grid.best_params_['C'])
+# print(type(grid.best_params_))
 write_log(svr_rbf, x_test, y_test, excel_file)
 plot_graph(svr_rbf, x_test, y_test)
+
+# grid = GridSearchCV(SVR(), param_grid={"C":[0.1, 1, 10], "gamma": [1, 0.1, 0.01]}, cv=4)
+# grid.fit(x, y)
+# print("The best parameters are %s with a score of %0.2f"
+#       % (grid.best_params_, grid.best_score_))
 
 
 
