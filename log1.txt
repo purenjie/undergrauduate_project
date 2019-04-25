@@ -1,0 +1,90 @@
+决定系数：0.0671
+均方误差：0.3075
+读取文件：data.xlsx
+模型参数：SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='auto',
+  kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
+=============================================================
+决定系数：0.0671
+均方误差：0.3075
+读取文件：data.xlsx
+模型参数：SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='auto',
+  kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
+=============================================================
+决定系数：0.0671
+均方误差：0.3075
+读取文件：data.xlsx
+模型参数：SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='auto',
+  kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
+=============================================================
+决定系数：0.1848
+均方误差：0.2687
+读取文件：data.xlsx
+模型参数：SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='auto',
+  kernel='linear', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
+=============================================================
+决定系数：-0.1353
+均方误差：0.2493
+读取文件：data.xlsx
+模型参数：SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='auto',
+  kernel='linear', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
+=============================================================
+决定系数：0.0312
+均方误差：0.2127
+读取文件：data.xlsx
+模型参数：SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='auto',
+  kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
+=============================================================
+决定系数：0.0312
+均方误差：0.2127
+读取文件：data.xlsx
+模型参数：SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='auto',
+  kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
+=============================================================
+决定系数：-0.0650
+均方误差：0.2339
+读取文件：data.xlsx
+模型参数：SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='auto',
+  kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
+=============================================================
+决定系数：-0.1276
+均方误差：0.2476
+读取文件：data.xlsx
+模型参数：SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='auto',
+  kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
+=============================================================
+决定系数：-0.1256
+均方误差：0.2472
+读取文件：data.xlsx
+模型参数：SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='auto',
+  kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
+=============================================================
+决定系数：-0.1276
+均方误差：0.2476
+读取文件：data.xlsx
+模型参数：SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='auto',
+  kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
+=============================================================
+决定系数：-0.1256
+均方误差：0.2472
+读取文件：data.xlsx
+模型参数：SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='auto',
+  kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
+=============================================================
+决定系数：0.0312
+均方误差：0.2127
+读取文件：data.xlsx
+模型参数：SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='auto',
+  kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
+=============================================================
+决定系数：0.1612
+均方误差：0.1842
+读取文件：data.xlsx
+模型参数：SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='auto',
+  kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
+=============================================================
+决定系数：0.1612
+均方误差：0.1842
+读取文件：data.xlsx
+模型参数：SVR(C=1.0, cache_size=200, coef0=0.0, degree=3, epsilon=0.1, gamma='auto',
+  kernel='rbf', max_iter=-1, shrinking=True, tol=0.001, verbose=False)
+=============================================================
