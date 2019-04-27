@@ -1,40 +1,34 @@
-import pywt
 import pandas as pd
 from sklearn.svm import SVR
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
-from sklearn import preprocessing
+from sklearn.preprocessing import MinMaxScaler
+import pywt
+from sklearn.model_selection import GridSearchCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_absolute_error
 
-
+# 读取 excel 文件，默认返回第一张表 
+# 返回类型：<class 'pandas.core.frame.DataFrame'>
 def get_data(file):
     sheet = pd.read_excel(io=file)
     return sheet
 
-
-def plot_graph(x, y, svr_model):
-    # 样本数——横轴
-    sample = [i for i in range(1, len(x)+1)]
-    sample = np.reshape(sample, (len(sample), 1))
-
-    # 根据给定的训练数据拟合SVM模型
-    svr_model.fit(x, y)
-
+# 异常值处理：——拉依达法则：数据偏差大于三倍标准差剔除
+def remove_outlier(x, y):
+    mean = np.mean(y)  # 平均值
+    std = np.std(y)  # 标准差
     
-    plt.plot(sample, y, color='black', label='Data')  # 实际数据
-#     plt.plot(sample, svr_model.predict(x), color='red', label='RBF model')  # 预测数据
-
-    plt.xlabel('sample')  # x 轴标签
-    plt.ylabel('utilization')  # y 轴标签
-    plt.title('Support Vector Regression')  # 图像标题
-    plt.legend()  # 显示图例（label）
-    plt.show()  # 显示图像
-
-def plot_graph_1(x, y):
-    plt.plot(np.arange(1, len(x)+1).reshape((len(x), 1)), x, color='black', label='Data')
-    plt.plot(np.arange(1, len(y)+1).reshape((len(y), 1)), y, color='red', label='Data')
-    plt.show()
+    lower_limit = mean-3*std  # 最小值
+    upper_limit = mean+3*std  # 最大值
+    
+    for i in range(y.shape[0]):
+        if y[i]<lower_limit or y[i]>upper_limit:
+            x = x.drop(i)
+            y = y.drop(i)
+    return x, y
 
 # 打包为函数，方便调节参数。  
 # lv为分解层数；data为最后保存的dataframe便于作图；
@@ -59,32 +53,88 @@ def wt(index_list,wavefunc,lv,m,n):
 
     # 重构
     denoised_index = pywt.waverec(coeff,wavefunc)
-    return denoised_index
+    return denoised_index[1:]
 
-excel_file = '/home/solejay/program/undergrauduate_project/excel/more.xlsx'
+# 输出模型预测率 并写入日志文件
+def write_log(svr_model, x_test, y_test, excel_file):
+    
+    y_pred = svr_model.predict(x_test)
+    
+    mse = mean_squared_error(y_test, y_pred) / 100
+    print('均方误差：%.4f' % mse) 
+    
+    mae = mean_absolute_error(y_test, y_pred) / 100
+    print('平均误差：%.4f' % mae)
+
+    log_file = '/home/solejay/program/undergrauduate_project/log1.txt'
+    with open(log_file, 'a') as f:
+        s1 = '均方误差：%.4f' % mse + '\n'
+        s2 = '平均误差：%.4f' % mae + '\n'
+        s3 = '读取文件：' + excel_file.split('/')[-1] + '\n'
+        s4 = '模型参数：' + str(svr_model) + '\n'
+        s5 = '=============================================================\n'
+        s = s1 + s2 + s3 + s4 + s5
+        f.write(s)
+
+def plot_graph_1(x, y):
+    plt.plot(np.arange(1, len(x)+1).reshape((len(x), 1)), x, color='black', label='Data')
+    plt.plot(np.arange(1, len(y)+1).reshape((len(y), 1)), y, color='red', label='Data')
+    plt.show()
+
+# 画出预测值和实际值的图像
+def plot_graph(svr_model, x_test, y_test):
+    sample = [i for i in range(1, len(y_test)+1)]
+    sample = np.reshape(sample, (len(sample), 1))
+    
+    y_pred = svr_model.predict(x_test)
+
+    plt.plot(sample, y_test, color='black', label='y_test')
+    plt.plot(sample, y_pred, color='red', label='y_pred')
+
+    plt.xlabel('sample')
+    plt.ylabel('utilization')
+    plt.title('Support Vector Regression')
+    plt.legend()
+    plt.show()
+
+
+
+
+excel_file = '/home/solejay/program/undergrauduate_project/excel/1000_1.xlsx'
 data = get_data(excel_file)
 
-x = data.iloc[:, 0:5]
-y = data.iloc[:, 5]
-svr_rbf = SVR(kernel='rbf', gamma='auto')
+x = data.iloc[:, 0:6]
+y = data.iloc[:, 6] 
 
-x1 = x.iloc[:, 0]  # 风压
-x2 = x.iloc[:, 1]  # 顶压
-x3 = x.iloc[:, 2]  # 风温
-x4 = x.iloc[:, 3]  # O2_FYL
-x5 = x.iloc[:, 4]  # 顶温
+# 异常值处理
+x, y = remove_outlier(x, y) # 1000 组剔除 4 组数据   1000.xlsx
 
-x1_ = wt(x1,'db4',4,2,4) 
-x2_ = wt(x2,'db4',4,2,4) 
-x3_ = wt(x3,'db4',4,2,4) 
-x4_ = wt(x4,'db4',4,2,4) 
-x5_ = wt(x5,'db4',4,2,4) 
-y_ = wt(y,'db4',4,1,4) 
+# 划分训练集和测试集
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=0)
 
-plot_graph_1(x1, x1_)
-plot_graph_1(x2, x2_)
-plot_graph_1(x3, x3_)
-plot_graph_1(x4, x4_)
-plot_graph_1(x5, x5_)
-plot_graph_1(y, y_)
+# 归一化处理
+
+# min_max_scaler = MinMaxScaler()
+# x_train = min_max_scaler.fit_transform(x_train)
+# x_test = min_max_scaler.transform(x_test)
+
+# 效果更好
+x_scaler = StandardScaler()
+x_train = x_scaler.fit_transform(x_train)
+x_test = x_scaler.transform(x_test)
+
+
+parameters = {'kernel':['rbf'], 'gamma':np.logspace(-5, 3, num=6, base=2),'C':np.logspace(-2, 3, num=5)}
+grid_search = GridSearchCV(SVR(), parameters, cv=10, n_jobs=4, scoring='neg_mean_squared_error')
+grid_search.fit(x_train,y_train)
+
+write_log(grid_search, x_test, y_test, excel_file)
+plot_graph(grid_search, x_test, y_test)
+
+
+
+
+
+
+
 
