@@ -29,12 +29,15 @@
 样本值和平均值的查的绝对值大于三倍的标准差时，将该样本值剔除。
 
 2. 数据平滑处理（去噪）
+3. 标准化处理
 
-采用小波去噪，采用 4 层去噪，软阈值处理，阈值处理的小波系数层数分别为 1 和 4。
+新数据=（原数据-均值）/标准差
 
-3. 归一化处理
+z-score标准化，也称为标准化分数，这种方法根据原始数据的均值和标准差进行标准化，经过处理后的数据符合标准正态分布，即均值为0，标准差为1（根据下面的转化函数很容易证明），转化函数为：
 
-若不进行归一化处理，支持向量机的 mse（均方误差）会较大。
+![](https://img-blog.csdn.net/20160706160124006?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center)
+
+所以说，这种标准化我们称之为归一化的时候，本质上是指将原始数据的标准差映射成1，是标准差归一化。标准差分数可以回答这样一个问题：“给定数据距离其均值多少个标准差”的问题，在均值之上的数据会得到一个正的标准化分数，反之会得到一个负的标准化分数。
 
 ### 代码编写
 
@@ -46,6 +49,10 @@ from sklearn.svm import SVR  # 选择核函数和调整参数
 import matplotlib.pyplot as plt  # 画图
 import numpy as np  # 数组操作
 from sklearn.model_selection import train_test_split  # 将数据划分为训练集和测试集
+from sklearn.metrics import mean_squared_error  # 计算 mse
+from sklearn.metrics import mean_absolute_error  # 计算 mae
+from sklearn.model_selection import GridSearchCV  # 交叉验证选取最佳 SVR 系数
+from sklearn.preprocessing import StandardScaler  # z-score 标准化
 ```
 
 - 数据预处理
@@ -65,33 +72,10 @@ def remove_outlier(x, y):
             y = y.drop(i)
     return x, y
 
-
-# 小波去噪
-# lv为分解层数；data为最后保存的dataframe便于作图；
-# index_list为待处理序列；wavefunc为选取的小波函数；
-# m,n则选择了进行阈值处理的小波系数层数
-def wt(index_list,wavefunc,lv,m,n):    
-    # 按 level 层分解，使用pywt包进行计算， cAn是尺度系数 cDn为小波系数
-    coeff = pywt.wavedec(index_list,wavefunc,mode='sym',level=lv)   
-    sgn = lambda x: 1 if x > 0 else -1 if x < 0 else 0 # sgn函数
-
-    # 去噪过程
-    for i in range(m,n+1):   # 选取小波系数层数为 m~n层，尺度系数不需要处理
-        cD = coeff[i]
-        for j in range(len(cD)):
-            Tr = np.sqrt(2*np.log(len(cD)))  # 计算阈值
-            if cD[j] >= Tr:
-                coeff[i][j] = sgn(cD[j]) - Tr  # 向零收缩
-            else:
-                coeff[i][j] = 0   # 低于阈值置零
-    # 重构
-    denoised_index = pywt.waverec(coeff,wavefunc)
-    return denoised_index[1:]
-
-
 # 归一化处理
-x = preprocessing.scale(x)
-y = preprocessing.scale(y)
+x_scaler = StandardScaler()
+x_train = x_scaler.fit_transform(x_train)
+x_test = x_scaler.transform(x_test)
 ```
 
 - 定义函数
@@ -105,41 +89,16 @@ def get_data(file):
 ```
 
 ```python
-# 输出模型预测率
-def score(svr_model, x, y):
-    svr_model.fit(x, y)
-    print('预测率：', svr_model.score(x, y))
-```
-
-```python
-# 画出模型对数据的输入输出数据的预测情况
-def plot_graph(x, y, svr_model):
+# 画出预测值和实际值的图像
+def plot_graph(svr_model, x_test, y_test):
     # 样本数——横轴
     sample = [i for i in range(1, len(x)+1)]
     sample = np.reshape(sample, (len(sample), 1))
 
-    # 根据给定的训练数据拟合SVM模型
-    svr_model.fit(x, y)
+    y_pred = svr_model.predict(x_test)
 
-    
-    plt.plot(sample, y, color='black', label='Data')  # 实际数据
-    plt.plot(sample, svr_model.predict(x), color='red', label='RBF model')  # 预测数据
-
-    plt.xlabel('sample')  # x 轴标签
-    plt.ylabel('utilization')  # y 轴标签
-    plt.title('Support Vector Regression')  # 图像标题
-    plt.legend()  # 显示图例（label）
-    plt.show()  # 显示图像
-```
-
-```python
-# 画出训练后模型 预测值 和 实际值 的图像
-def plot_result(y_test, y_pre_test):
-    sample = [i for i in range(1, len(y_test)+1)]
-    sample = np.reshape(sample, (len(sample), 1))
-    
     plt.plot(sample, y_test, color='black', label='y_test')
-    plt.plot(sample, y_pre_test, color='red', label='y_pre_test')
+    plt.plot(sample, y_pred, color='red', label='y_pred')
 
     plt.xlabel('sample')
     plt.ylabel('utilization')
@@ -184,22 +143,23 @@ def plot_three_kernel(x, y):
 ```python
 # 输出模型预测率 并写入日志文件
 def write_log(svr_model, x_test, y_test, excel_file):
-
-    pre_rate = svr_model.score(x_test, y_test)
-    print('决定系数：%.4f' % pre_rate)
-
-    y_pred = svr_rbf.predict(x_test)
+    
+    y_pred = svr_model.predict(x_test)
+    
     mse = mean_squared_error(y_test, y_pred)
     print('均方误差：%.4f' % mse) 
+    
+    mae = mean_absolute_error(y_test, y_pred)
+    print('平均误差：%.4f' % mae)
 
-    log_file = '/home/solejay/program/undergrauduate_project/log.txt'
+    log_file = '/home/solejay/program/undergrauduate_project/log1.txt'
     with open(log_file, 'a') as f:
-        s0 = '预测率：%.4f' % pre_rate + '\n'
         s1 = '均方误差：%.4f' % mse + '\n'
-        s2 = '读取文件：' + excel_file.split('/')[-1] + '\n'
-        s3 = '模型参数：' + str(svr_model) + '\n'
-        s4 = '=============================================================\n'
-        s = s0 + s1 + s2 + s3 + s4
+        s2 = '平均误差：%.4f' % mae + '\n'
+        s3 = '读取文件：' + excel_file.split('/')[-1] + '\n'
+        s4 = '模型参数：' + str(svr_model) + '\n'
+        s5 = '=============================================================\n'
+        s = s1 + s2 + s3 + s4 + s5
         f.write(s)
 ```
 

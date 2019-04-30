@@ -97,14 +97,11 @@ def plot_graph(svr_model, x_test, y_test):
     plt.legend()
     plt.show()
 
-
-
-
-excel_file = '/home/solejay/program/undergrauduate_project/excel/1000.xlsx'
+excel_file = '/home/solejay/program/undergrauduate_project/excel/去噪.xlsx'
 data = get_data(excel_file)
 
 x = data.iloc[:, 0:6]
-y = data.iloc[:, 6]
+y = data.iloc[:, 6] 
 
 # 异常值处理
 x, y = remove_outlier(x, y) # 1000 组剔除 4 组数据   1000.xlsx
@@ -113,12 +110,6 @@ x, y = remove_outlier(x, y) # 1000 组剔除 4 组数据   1000.xlsx
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=0)
 
 # 归一化处理
-
-# min_max_scaler = MinMaxScaler()
-# x_train = min_max_scaler.fit_transform(x_train)
-# x_test = min_max_scaler.transform(x_test)
-
-# 效果更好
 x_scaler = StandardScaler()
 x_train = x_scaler.fit_transform(x_train)
 x_test = x_scaler.transform(x_test)
@@ -130,6 +121,13 @@ grid_search.fit(x_train,y_train)
 
 write_log(grid_search, x_test, y_test, excel_file)
 plot_graph(grid_search, x_test, y_test)
+
+
+# svr_rbf = SVR(kernel='rbf', gamma='auto')
+# svr_rbf.fit(x_train, y_train)
+
+# write_log(svr_rbf, x_test, y_test, excel_file)
+# plot_graph(svr_rbf, x_test, y_test)
 
 
 
