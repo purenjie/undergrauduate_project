@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
-from sklearn.preprocessing import MinMaxScaler
 import pywt
 from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import StandardScaler
@@ -97,7 +96,7 @@ def plot_graph(svr_model, x_test, y_test):
     plt.legend()
     plt.show()
 
-excel_file = '/home/solejay/program/undergrauduate_project/excel/去噪.xlsx'
+excel_file = '/home/solejay/program/undergrauduate_project/excel/去噪1000.xlsx'
 data = get_data(excel_file)
 
 x = data.iloc[:, 0:6]
