@@ -33,10 +33,11 @@ def remove_outlier(x, y):
 # lv为分解层数；data为最后保存的dataframe便于作图；
 # index_list为待处理序列；wavefunc为选取的小波函数；
 # m,n则选择了进行阈值处理的小波系数层数
-def wt(index_list,wavefunc,lv,m,n):   
+# 函数打包
+def wt(index_list, wavefunc,lv,m,n):   # 打包为函数，方便调节参数。  lv为分解层数；data为最后保存的dataframe便于作图；index_list为待处理序列；wavefunc为选取的小波函数；m,n则选择了进行阈值处理的小波系数层数
    
-    # 按 level 层分解，使用pywt包进行计算， cAn是尺度系数 cDn为小波系数
-    coeff = pywt.wavedec(index_list,wavefunc,mode='sym',level=lv)   
+    # 分解
+    coeff = pywt.wavedec(index_list,wavefunc,mode='sym',level=lv)   # 按 level 层分解，使用pywt包进行计算， cAn是尺度系数 cDn为小波系数
 
     sgn = lambda x: 1 if x > 0 else -1 if x < 0 else 0 # sgn函数
 
@@ -51,8 +52,7 @@ def wt(index_list,wavefunc,lv,m,n):
                 coeff[i][j] = 0   # 低于阈值置零
 
     # 重构
-    denoised_index = pywt.waverec(coeff,wavefunc)
-    return denoised_index[1:]
+    return(pywt.waverec(coeff,wavefunc))
 
 # 输出模型预测率 并写入日志文件
 def write_log(svr_model, x_test, y_test, excel_file):
@@ -65,20 +65,15 @@ def write_log(svr_model, x_test, y_test, excel_file):
     mae = mean_absolute_error(y_test, y_pred)
     print('平均误差：%.4f' % mae)
 
-    log_file = '/home/solejay/program/undergrauduate_project/log1.txt'
-    with open(log_file, 'a') as f:
-        s1 = '均方误差：%.4f' % mse + '\n'
-        s2 = '平均误差：%.4f' % mae + '\n'
-        s3 = '读取文件：' + excel_file.split('/')[-1] + '\n'
-        s4 = '模型参数：' + str(svr_model) + '\n'
-        s5 = '=============================================================\n'
-        s = s1 + s2 + s3 + s4 + s5
-        f.write(s)
-
-def plot_graph_1(x, y):
-    plt.plot(np.arange(1, len(x)+1).reshape((len(x), 1)), x, color='black', label='Data')
-    plt.plot(np.arange(1, len(y)+1).reshape((len(y), 1)), y, color='red', label='Data')
-    plt.show()
+    # log_file = '/home/solejay/program/undergrauduate_project/log1.txt'
+    # with open(log_file, 'a') as f:
+    #     s1 = '均方误差：%.4f' % mse + '\n'
+    #     s2 = '平均误差：%.4f' % mae + '\n'
+    #     s3 = '读取文件：' + excel_file.split('/')[-1] + '\n'
+    #     s4 = '模型参数：' + str(svr_model) + '\n'
+    #     s5 = '=============================================================\n'
+    #     s = s1 + s2 + s3 + s4 + s5
+    #     f.write(s)
 
 # 画出预测值和实际值的图像
 def plot_graph(svr_model, x_test, y_test):
@@ -87,16 +82,16 @@ def plot_graph(svr_model, x_test, y_test):
     
     y_pred = svr_model.predict(x_test)
 
-    plt.plot(sample, y_test, color='black', label='y_test')
-    plt.plot(sample, y_pred, color='red', label='y_pred')
+    plt.plot(sample, y_test, color='black', label='真实值')
+    plt.plot(sample, y_pred, color='black', marker='p', label='预测值')
 
-    plt.xlabel('sample')
-    plt.ylabel('utilization')
-    plt.title('Support Vector Regression')
+    plt.xlabel('样本')
+    plt.ylabel('CO利用率 %')
+    plt.title('支持向量机')
     plt.legend()
     plt.show()
 
-excel_file = '/home/solejay/program/undergrauduate_project/excel/去噪1000.xlsx'
+excel_file = '/home/solejay/program/undergrauduate_project/excel/1000.xlsx'
 data = get_data(excel_file)
 
 x = data.iloc[:, 0:6]
@@ -104,6 +99,11 @@ y = data.iloc[:, 6]
 
 # 异常值处理
 x, y = remove_outlier(x, y) # 1000 组剔除 4 组数据   1000.xlsx
+
+for i in range(5):
+    x.iloc[:, i] = wt(x.iloc[:, i],'db5',4,1,4) 
+y = wt(y,'db5',4,1,4) 
+
 
 # 划分训练集和测试集
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=0)
@@ -114,24 +114,16 @@ x_train = x_scaler.fit_transform(x_train)
 x_test = x_scaler.transform(x_test)
 
 
-parameters = {'kernel':['rbf'], 'gamma':np.logspace(-5, 3, num=6, base=2),'C':np.logspace(-2, 3, num=5)}
-grid_search = GridSearchCV(SVR(), parameters, cv=10, n_jobs=4, scoring='neg_mean_squared_error')
-grid_search.fit(x_train,y_train)
+# parameters = {'kernel':['rbf'], 'gamma':np.logspace(-5, 3, num=6, base=2),'C':np.logspace(-2, 3, num=5)}
+# grid_search = GridSearchCV(SVR(), parameters, cv=10, n_jobs=4, scoring='neg_mean_squared_error')
+# grid_search.fit(x_train,y_train)
 
-write_log(grid_search, x_test, y_test, excel_file)
-plot_graph(grid_search, x_test, y_test)
-
-
-# svr_rbf = SVR(kernel='rbf', gamma='auto')
-# svr_rbf.fit(x_train, y_train)
-
-# write_log(svr_rbf, x_test, y_test, excel_file)
-# plot_graph(svr_rbf, x_test, y_test)
+# write_log(grid_search, x_test, y_test, excel_file)
+# plot_graph(grid_search, x_test, y_test)
 
 
+svr_rbf = SVR(kernel='rbf', gamma='auto')
+svr_rbf.fit(x_train, y_train)
 
-
-
-
-
-
+write_log(svr_rbf, x_test, y_test, excel_file)
+plot_graph(svr_rbf, x_test, y_test)
