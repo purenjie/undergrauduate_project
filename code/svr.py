@@ -52,7 +52,7 @@ def wt(index_list, wavefunc,lv,m,n):   # 打包为函数，方便调节参数。
                 coeff[i][j] = 0   # 低于阈值置零
 
     # 重构
-    return(pywt.waverec(coeff,wavefunc))
+    return(pywt.waverec(coeff,wavefunc)[1:])
 
 # 输出模型预测率 并写入日志文件
 def write_log(svr_model, x_test, y_test, excel_file):
@@ -91,16 +91,16 @@ def plot_graph(svr_model, x_test, y_test):
     plt.legend()
     plt.show()
 
-excel_file = '/home/solejay/program/undergrauduate_project/excel/1000.xlsx'
+excel_file = '/home/solejay/program/undergrauduate_project/excel/全部1000.xlsx'
 data = get_data(excel_file)
 
-x = data.iloc[:, 0:6]
-y = data.iloc[:, 6] 
+x = data.iloc[:, 0:9]
+y = data.iloc[:, 10] 
 
 # 异常值处理
 x, y = remove_outlier(x, y) # 1000 组剔除 4 组数据   1000.xlsx
 
-for i in range(5):
+for i in range(9):
     x.iloc[:, i] = wt(x.iloc[:, i],'db5',4,1,4) 
 y = wt(y,'db5',4,1,4) 
 
@@ -114,16 +114,16 @@ x_train = x_scaler.fit_transform(x_train)
 x_test = x_scaler.transform(x_test)
 
 
-# parameters = {'kernel':['rbf'], 'gamma':np.logspace(-5, 3, num=6, base=2),'C':np.logspace(-2, 3, num=5)}
-# grid_search = GridSearchCV(SVR(), parameters, cv=10, n_jobs=4, scoring='neg_mean_squared_error')
-# grid_search.fit(x_train,y_train)
+parameters = {'kernel':['rbf'], 'gamma':np.logspace(-5, 3, num=6, base=2),'C':np.logspace(-2, 3, num=5)}
+grid_search = GridSearchCV(SVR(), parameters, cv=10, n_jobs=4, scoring='neg_mean_squared_error')
+grid_search.fit(x_train,y_train)
 
-# write_log(grid_search, x_test, y_test, excel_file)
-# plot_graph(grid_search, x_test, y_test)
+write_log(grid_search, x_test, y_test, excel_file)
+plot_graph(grid_search, x_test, y_test)
 
 
-svr_rbf = SVR(kernel='rbf', gamma='auto')
-svr_rbf.fit(x_train, y_train)
+# svr_rbf = SVR(kernel='rbf', gamma='auto')
+# svr_rbf.fit(x_train, y_train)
 
-write_log(svr_rbf, x_test, y_test, excel_file)
-plot_graph(svr_rbf, x_test, y_test)
+# write_log(svr_rbf, x_test, y_test, excel_file)
+# plot_graph(svr_rbf, x_test, y_test)
