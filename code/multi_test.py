@@ -55,7 +55,7 @@ def wt(index_list, wavefunc,lv,m,n):   # 打包为函数，方便调节参数。
     return(pywt.waverec(coeff,wavefunc)[1:])
 
 # 输出模型预测率 并写入日志文件
-def write_log(svr_model, x_test, y_test, excel_file):
+def accuracy(svr_model, x_test, y_test):
     
     y_pred = svr_model.predict(x_test)
     
@@ -64,32 +64,9 @@ def write_log(svr_model, x_test, y_test, excel_file):
     
     mae = mean_absolute_error(y_test, y_pred)
     print('平均误差：%.4f' % mae)
-
-    log_file = '/home/solejay/program/undergrauduate_project/log1.txt'
-    with open(log_file, 'a') as f:
-        s1 = '均方误差：%.4f' % mse + '\n'
-        s2 = '平均误差：%.4f' % mae + '\n'
-        s3 = '读取文件：' + excel_file.split('/')[-1] + '\n'
-        s4 = '模型参数：' + str(svr_model) + '\n'
-        s5 = '=============================================================\n'
-        s = s1 + s2 + s3 + s4 + s5
-        f.write(s)
-
-# 画出预测值和实际值的图像
-def plot_graph(svr_model, x_test, y_test):
-    sample = [i for i in range(1, len(y_test)+1)]
-    sample = np.reshape(sample, (len(sample), 1))
     
-    y_pred = svr_model.predict(x_test)
+    return (mse, mae)
 
-    plt.plot(sample, y_test, color='black', label='真实值')
-    plt.plot(sample, y_pred, color='black', marker='p', label='预测值')
-
-    plt.xlabel('样本')
-    plt.ylabel('CO利用率 %')
-    plt.title('支持向量机')
-    plt.legend()
-    plt.show()
 
 excel_file = '/home/solejay/program/undergrauduate_project/excel/全部1000.xlsx'
 data = get_data(excel_file)
@@ -106,7 +83,7 @@ y = wt(y,'db5',4,1,4)
 
 
 # 划分训练集和测试集
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=0)
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25)
 
 # 标准化处理
 x_scaler = StandardScaler()
@@ -117,15 +94,31 @@ x_test = x_scaler.transform(x_test)
 # clf = MLPRegressor(solver='lbfgs', random_state=0, max_iter=1000)
 # clf.fit(x_train, y_train)
 
-# write_log(clf, x_test, y_test, excel_file)
-# plot_graph(clf, x_test, y_test)
-
 parameters = {'kernel':['rbf'], 'gamma':np.logspace(-5, 3, num=6, base=2),'C':np.logspace(-2, 3, num=5)}
 grid_search = GridSearchCV(SVR(), parameters, cv=10, n_jobs=4, scoring='neg_mean_squared_error')
 grid_search.fit(x_train,y_train)
 
-write_log(grid_search, x_test, y_test, excel_file)
-plot_graph(grid_search, x_test, y_test)
+MSE = []
+MAE = []
+
+for i in range(30):
+    mse, mae = accuracy(grid_search, x_test, y_test)
+    MSE.append(mse)
+    MAE.append(mae)
+
+mse_mean = np.mean(MSE)
+mae_mean = np.mean(MAE)
+
+print(mse_mean)
+print(mae_mean)
+
+
+# parameters = {'kernel':['rbf'], 'gamma':np.logspace(-5, 3, num=6, base=2),'C':np.logspace(-2, 3, num=5)}
+# grid_search = GridSearchCV(SVR(), parameters, cv=10, n_jobs=4, scoring='neg_mean_squared_error')
+# grid_search.fit(x_train,y_train)
+
+# write_log(grid_search, x_test, y_test, excel_file)
+# plot_graph(grid_search, x_test, y_test)
 
 
 # svr_rbf = SVR(kernel='rbf', gamma='auto')
